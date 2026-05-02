@@ -14,7 +14,7 @@ from ai_anomaly_detector import run_detection
 
 DB_URL = os.getenv(
     "ACADEMIC_DB_URL",
-    "mysql+mysqlconnector://root:Amit948@localhost/academic_integrity",
+    "mysql+pymysql://root:Amit948@localhost/academic_integrity",
 )
 
 # Official % = (sum of present sessions) / full-term session count (e.g. 65). Daily rows store
