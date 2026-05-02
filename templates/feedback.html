@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Submit Feedback{% endblock %}
+{% block content %}
+<h2>Submit Faculty Feedback</h2>
+<p>Select a faculty member to view the subject handled by them, then provide feedback for one faculty at a time.</p>
+
+{% if faculty_options %}
+<form method="get" id="faculty-select-form" style="margin-bottom: 1.5rem;">
+    <label for="faculty_id" style="display:block; font-weight:700; color:#e5e7eb; margin-bottom:0.5rem;">Choose faculty:</label>
+    <select name="faculty_id" id="faculty_id" onchange="document.getElementById('faculty-select-form').submit()" style="width:100%; max-width:420px; padding:0.75rem; border-radius:0.75rem; border:1px solid #4b5563; background:#111827; color:#f8fafc;">
+        {% for faculty in faculty_options %}
+            <option value="{{ faculty.faculty_id }}" {% if selected_faculty and faculty.faculty_id == selected_faculty.faculty_id %}selected{% endif %}>
+                {{ faculty.faculty_name }} ({{ faculty.emp_no }}) — {{ faculty.assignments | length }} subject{{ 's' if faculty.assignments | length > 1 else '' }}
+            </option>
+        {% endfor %}
+    </select>
+</form>
+
+{% if selected_faculty %}
+<div class="feedback-card" style="border:1px solid #d1d5db; border-radius:1rem; padding:1.5rem; background:#fff; color:#111827;">
+    <h3>{{ selected_faculty.faculty_name }} ({{ selected_faculty.emp_no }})</h3>
+    <p style="margin-top:0.25rem; color:#475569;">Submit feedback for one faculty at a time. After you submit, choose the next faculty to continue.</p>
+
+    <form method="POST" action="{{ url_for('feedback') }}">
+        <input type="hidden" name="faculty_id" value="{{ selected_faculty.faculty_id }}">
+
+        <div class="form-row" style="margin-bottom:1rem;">
+            <label for="enroll_id" style="font-weight:700; color:#111827;">Subject handled by this faculty</label>
+            <select name="enroll_id" id="enroll_id" required style="width:100%; max-width:520px; padding:0.75rem; border:1px solid #94a3b8; border-radius:0.75rem; background:#f8fafc; color:#111827;">
+                {% for assignment in selected_faculty.assignments %}
+                    <option value="{{ assignment.enroll_id }}" {% if selected_assignment and assignment.enroll_id == selected_assignment.enroll_id %}selected{% endif %}>
+                        {{ assignment.subject_code }} - {{ assignment.subject_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% set item = feedback_data[selected_assignment.enroll_id] if selected_assignment else None %}
+        <div class="rating-section" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem;">
+            <div class="rating-item">
+                <label for="teaching_quality"><strong>Teaching Quality</strong></label>
+                <select name="teaching_quality" id="teaching_quality" required>
+                    <option value="">Select Rating</option>
+                    <option value="excellent" {% if item and item.teaching_quality == 'excellent' %}selected{% endif %}>Excellent</option>
+                    <option value="good" {% if item and item.teaching_quality == 'good' %}selected{% endif %}>Good</option>
+                    <option value="average" {% if item and item.teaching_quality == 'average' %}selected{% endif %}>Average</option>
+                    <option value="poor" {% if item and item.teaching_quality == 'poor' %}selected{% endif %}>Poor</option>
+                </select>
+            </div>
+
+            <div class="rating-item">
+                <label for="subject_knowledge"><strong>Subject Knowledge</strong></label>
+                <select name="subject_knowledge" id="subject_knowledge" required>
+                    <option value="">Select Rating</option>
+                    <option value="excellent" {% if item and item.subject_knowledge == 'excellent' %}selected{% endif %}>Excellent</option>
+                    <option value="good" {% if item and item.subject_knowledge == 'good' %}selected{% endif %}>Good</option>
+                    <option value="average" {% if item and item.subject_knowledge == 'average' %}selected{% endif %}>Average</option>
+                    <option value="poor" {% if item and item.subject_knowledge == 'poor' %}selected{% endif %}>Poor</option>
+                </select>
+            </div>
+
+            <div class="rating-item">
+                <label for="communication"><strong>Communication</strong></label>
+                <select name="communication" id="communication" required>
+                    <option value="">Select Rating</option>
+                    <option value="excellent" {% if item and item.communication == 'excellent' %}selected{% endif %}>Excellent</option>
+                    <option value="good" {% if item and item.communication == 'good' %}selected{% endif %}>Good</option>
+                    <option value="average" {% if item and item.communication == 'average' %}selected{% endif %}>Average</option>
+                    <option value="poor" {% if item and item.communication == 'poor' %}selected{% endif %}>Poor</option>
+                </select>
+            </div>
+
+            <div class="rating-item">
+                <label for="preparation"><strong>Preparation</strong></label>
+                <select name="preparation" id="preparation" required>
+                    <option value="">Select Rating</option>
+                    <option value="excellent" {% if item and item.preparation == 'excellent' %}selected{% endif %}>Excellent</option>
+                    <option value="good" {% if item and item.preparation == 'good' %}selected{% endif %}>Good</option>
+                    <option value="average" {% if item and item.preparation == 'average' %}selected{% endif %}>Average</option>
+                    <option value="poor" {% if item and item.preparation == 'poor' %}selected{% endif %}>Poor</option>
+                </select>
+            </div>
+
+            <div class="rating-item">
+                <label for="responsiveness"><strong>Responsiveness</strong></label>
+                <select name="responsiveness" id="responsiveness" required>
+                    <option value="">Select Rating</option>
+                    <option value="excellent" {% if item and item.responsiveness == 'excellent' %}selected{% endif %}>Excellent</option>
+                    <option value="good" {% if item and item.responsiveness == 'good' %}selected{% endif %}>Good</option>
+                    <option value="average" {% if item and item.responsiveness == 'average' %}selected{% endif %}>Average</option>
+                    <option value="poor" {% if item and item.responsiveness == 'poor' %}selected{% endif %}>Poor</option>
+                </select>
+            </div>
+
+            <div class="rating-item">
+                <label for="punctuality"><strong>Punctuality</strong></label>
+                <select name="punctuality" id="punctuality" required>
+                    <option value="">Select Rating</option>
+                    <option value="excellent" {% if item and item.punctuality == 'excellent' %}selected{% endif %}>Excellent</option>
+                    <option value="good" {% if item and item.punctuality == 'good' %}selected{% endif %}>Good</option>
+                    <option value="average" {% if item and item.punctuality == 'average' %}selected{% endif %}>Average</option>
+                    <option value="poor" {% if item and item.punctuality == 'poor' %}selected{% endif %}>Poor</option>
+                </select>
+            </div>
+
+            <div class="rating-item">
+                <label for="overall_rating"><strong>Overall Rating</strong></label>
+                <select name="overall_rating" id="overall_rating" required>
+                    <option value="">Select Rating</option>
+                    <option value="excellent" {% if item and item.overall_rating == 'excellent' %}selected{% endif %}>Excellent</option>
+                    <option value="good" {% if item and item.overall_rating == 'good' %}selected{% endif %}>Good</option>
+                    <option value="average" {% if item and item.overall_rating == 'average' %}selected{% endif %}>Average</option>
+                    <option value="poor" {% if item and item.overall_rating == 'poor' %}selected{% endif %}>Poor</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="comments-section" style="margin-top:1.25rem;">
+            <label for="comments" style="font-weight:700; color:#111827;">Additional comments (optional)</label>
+            <textarea name="comments" id="comments" rows="4" style="width:100%; padding:0.85rem; border-radius:0.75rem; border:1px solid #cbd5e1; background:#f8fafc; color:#111827; font-size:0.95rem;">{% if item %}{{ item.comments or '' }}{% endif %}</textarea>
+        </div>
+
+        <div style="margin-top:1.5rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:1rem; align-items:center;">
+            {% if item %}
+                <span style="color:#047857; font-weight:600;">Feedback already submitted for this subject. Update it if needed.</span>
+            {% endif %}
+            <button type="submit" style="background:#2563eb; color:white; border:none; padding:0.85rem 1.5rem; border-radius:0.75rem; font-size:0.95rem; cursor:pointer;">{% if item %}Update Feedback{% else %}Submit Feedback{% endif %}</button>
+        </div>
+    </form>
+</div>
+{% endif %}
+{% else %}
+<p>No enrollments found. Please contact admin if you believe this is an error.</p>
+{% endif %}
+
+<style>
+.rating-section {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:1rem;
+}
+
+.rating-item {
+    display:flex;
+    flex-direction:column;
+    gap:0.45rem;
+}
+
+.rating-item label,
+.comments-section label {
+    font-size:0.95rem;
+    color:#111827;
+    font-weight:600;
+}
+
+.rating-item select,
+.comments-section textarea,
+#faculty_id,
+#enroll_id {
+    width:100%;
+    padding:0.75rem;
+    border-radius:0.75rem;
+    border:1px solid #94a3b8;
+    background:#f8fafc;
+    color:#111827;
+    font-size:0.95rem;
+}
+
+.rating-item select:focus,
+.comments-section textarea:focus,
+#faculty_id:focus,
+#enroll_id:focus {
+    outline:none;
+    border-color:#2563eb;
+    box-shadow:0 0 0 3px rgba(37,99,235,0.15);
+}
+</style>
+{% endblock %}

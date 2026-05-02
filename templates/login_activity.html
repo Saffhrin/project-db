@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Login Activity{% endblock %}
+{% block content %}
+<h2>Login Activity</h2>
+<p>View faculty/student login entry and exit times with filters.</p>
+
+<form method="get" class="filter-form">
+    <label>Role:
+        <select name="role">
+            <option value="">All</option>
+            {% for role in roles %}
+                <option value="{{ role }}" {% if selected_role == role %}selected{% endif %}>{{ role }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Department:
+        <select name="department">
+            <option value="">All</option>
+            {% for d in departments %}
+                <option value="{{ d }}" {% if selected_department == d %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Section:
+        <select name="section">
+            <option value="">All</option>
+            {% for s in sections %}
+                <option value="{{ s }}" {% if selected_section == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Year:
+        <select name="year">
+            <option value="">All</option>
+            {% for y in years %}
+                <option value="{{ y }}" {% if selected_year|string == y|string %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <button type="submit">Filter</button>
+</form>
+
+{% if activity %}
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Login Date/Time (IST)</th>
+            <th>Logout Date/Time (IST)</th>
+            <th>Duration (min)</th>
+            <th>User</th>
+            <th>Role</th>
+            <th>Department</th>
+            <th>Section</th>
+            <th>Year</th>
+            <th>Student</th>
+            <th>Faculty</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for row in activity %}
+        <tr>
+            <td>{{ row.login_dt or '---' }}</td>
+            <td>{{ row.logout_dt or '---' }}</td>
+            <td>{{ row.duration_minutes or '---' }}</td>
+            <td>{{ row.username }}</td>
+            <td>{{ row.role }}</td>
+            <td>{{ row.department or '---' }}</td>
+            <td>{{ row.section or '---' }}</td>
+            <td>{{ row.year_level or '---' }}</td>
+            <td>{{ row.student_name or row.student_reg_no or '---' }}</td>
+            <td>{{ row.faculty_name or row.faculty_emp_no or '---' }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No login activity records found using current criteria.</p>
+{% endif %}
+
+{% endblock %}

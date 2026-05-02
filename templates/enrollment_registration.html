@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Enrollment Registration{% endblock %}
+{% block content %}
+<h2>Enrollment Registration</h2>
+<p>Create link between student, subject and faculty so that marks and attendance can be recorded.</p>
+
+<form method="get" class="form-card" style="margin-bottom: 1rem;">
+    <div class="form-grid-2">
+        <div class="form-row">
+            <label for="department">Department</label>
+            <select id="department" name="department" onchange="this.form.submit()">
+                <option value="">All Departments</option>
+                {% for dep in departments %}
+                    <option value="{{ dep }}" {% if dep == selected_department %}selected{% endif %}>{{ dep }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="section">Section</label>
+            <select id="section" name="section" onchange="this.form.submit()">
+                <option value="">All Sections</option>
+                {% for sec in sections %}
+                    <option value="{{ sec }}" {% if sec == selected_section %}selected{% endif %}>{{ sec or 'N/A' }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="form-row" style="margin-top: 0.5rem;">
+        <button type="submit" class="btn-primary">Apply Filter</button>
+    </div>
+</form>
+
+<form method="post" class="form-card">
+    <div class="form-row">
+        <label for="student_id">Student</label>
+        <select id="student_id" name="student_id" required>
+            <option value="">Select student</option>
+            {% for s in students %}
+                <option value="{{ s.student_id }}">{{ s.reg_no }} - {{ s.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="subject_id">Subject</label>
+        <select id="subject_id" name="subject_id" required>
+            <option value="">Select subject</option>
+            {% for sub in subjects %}
+                <option value="{{ sub.subject_id }}">{{ sub.subject_code }} - {{ sub.subject_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="faculty_id">Faculty</label>
+        <select id="faculty_id" name="faculty_id" required>
+            <option value="">Select faculty</option>
+            {% for f in faculty %}
+                <option value="{{ f.faculty_id }}">{{ f.emp_no }} - {{ f.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="semester">Semester</label>
+        <input type="number" id="semester" name="semester" min="1" max="8" value="1">
+    </div>
+    <button type="submit" class="btn-primary">Save Enrollment</button>
+</form>
+{% endblock %}
+

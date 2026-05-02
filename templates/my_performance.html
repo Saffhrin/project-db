@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}My Marks & Attendance{% endblock %}
+{% block content %}
+<h2>My Marks &amp; Attendance</h2>
+<p>This page shows your internal marks for each enrolled subject. Click on a subject to see detailed breakdown. <strong>Attendance %</strong> and <strong>eligibility</strong> are shown on <a href="{{ url_for('my_daily_attendance') }}" style="color:#2563eb;">My Daily Attendance</a>.</p>
+<p style="margin-bottom: 1rem;">
+    <a class="btn-secondary" href="{{ url_for('my_performance_download') }}">Download My Marks CSV</a>
+</p>
+
+{% if records %}
+<div class="dashboard-row" style="display:flex; gap:.5rem; flex-wrap:wrap;">
+    <div class="card" style="flex:1; min-width:220px; max-width:360px; padding:.75rem; background:#fff; border:1px solid #ddd; border-radius:8px;">
+        <h3 style="font-size:1rem; font-weight:bold; margin-bottom:.5rem;">Course Wise Attendance (%)</h3>
+        <div style="position:relative; width:100%; height:180px;">
+            <canvas id="attendanceBarChart"></canvas>
+        </div>
+    </div>
+    <div class="card" style="flex:1; min-width:220px; max-width:260px; padding:.75rem; background:#fff; border:1px solid #ddd; border-radius:8px;">
+        <h3 style="font-size:1rem; font-weight:bold; margin-bottom:.5rem;">Attendance Hours</h3>
+        <div style="position:relative; width:100%; height:180px;">
+            <canvas id="attendanceDonutChart"></canvas>
+        </div>
+        <p style="margin-top:.5rem; font-size:.8rem; font-weight:bold;"><strong>Total:</strong> {{ total_classes }} | <strong>Present:</strong> {{ attended_classes }} | <strong>Absent:</strong> {{ absent_classes }}</p>
+    </div>
+</div>
+
+<table class="data-table" style="margin-top:1rem;">
+    <thead>
+    <tr>
+        <th></th>
+        <th>Subject Code</th>
+        <th>Subject Name</th>
+        <th>CT1 (15)</th>
+        <th>CT2 (15)</th>
+        <th>Project (20)</th>
+        <th>Assignment (10)</th>
+        <th>Internal Total (60)</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for r in records %}
+        <tr onclick="toggleDetails('details-{{ loop.index0 }}')" style="cursor: pointer;">
+            <td><span id="toggle-{{ loop.index0 }}">▶</span></td>
+            <td>{{ r.subject_code }}</td>
+            <td>{{ r.subject_name }}</td>
+            <td>{{ r.cycle_test_1 or '-' }}</td>
+            <td>{{ r.cycle_test_2 or '-' }}</td>
+            <td>{{ r.project_marks or '-' }}</td>
+            <td>{{ r.assignment_marks or '-' }}</td>
+            <td>{{ r.internal_total or '-' }}</td>
+        </tr>
+        <tr id="details-{{ loop.index0 }}" style="display: none; background-color: #f9f9f9;">
+            <td colspan="8" style="padding: 15px;">
+                {% if r.ct1_questions or r.ct2_questions or r.project_components %}
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                        {% if r.ct1_questions %}
+                        <div style="border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                            <h4 style="margin-top: 0;">Cycle Test 1 (50 → 15)</h4>
+                            <table style="width: 100%; font-size: 0.9rem;">
+                                {% for q in range(1, 6) %}
+                                <tr>
+                                    <td>Q{{ q }}:</td>
+                                    <td style="text-align: right;"><strong>{{ r.ct1_questions.get(q, 0) if r.ct1_questions else '-' }} / 10</strong></td>
+                                </tr>
+                                {% endfor %}
+                                <tr style="border-top: 1px solid #ddd; font-weight: bold;">
+                                    <td>Total:</td>
+                                    <td style="text-align: right;">{{ (r.ct1_questions.values() | sum) if r.ct1_questions else 0 }} / 50</td>
+                                </tr>
+                                <tr style="background-color: #e8f4f8;">
+                                    <td><strong>Scaled:</strong></td>
+                                    <td style="text-align: right;"><strong>{{ r.cycle_test_1 or '-' }} / 15</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                        {% endif %}
+                        
+                        {% if r.ct2_questions %}
+                        <div style="border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                            <h4 style="margin-top: 0;">Cycle Test 2 (50 → 15)</h4>
+                            <table style="width: 100%; font-size: 0.9rem;">
+                                {% for q in range(1, 6) %}
+                                <tr>
+                                    <td>Q{{ q }}:</td>
+                                    <td style="text-align: right;"><strong>{{ r.ct2_questions.get(q, 0) if r.ct2_questions else '-' }} / 10</strong></td>
+                                </tr>
+                                {% endfor %}
+                                <tr style="border-top: 1px solid #ddd; font-weight: bold;">
+                                    <td>Total:</td>
+                                    <td style="text-align: right;">{{ (r.ct2_questions.values() | sum) if r.ct2_questions else 0 }} / 50</td>
+                                </tr>
+                                <tr style="background-color: #e8f4f8;">
+                                    <td><strong>Scaled:</strong></td>
+                                    <td style="text-align: right;"><strong>{{ r.cycle_test_2 or '-' }} / 15</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                        {% endif %}
+                        
+                        {% if r.project_components %}
+                        <div style="border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                            <h4 style="margin-top: 0;">Project (20)</h4>
+                            <table style="width: 100%; font-size: 0.9rem;">
+                                {% for comp in r.project_components %}
+                                <tr>
+                                    <td>{{ comp.component_name }}:</td>
+                                    <td style="text-align: right;"><strong>{{ comp.marks_obtained }} / {{ comp.max_marks }}</strong></td>
+                                </tr>
+                                {% endfor %}
+                                <tr style="border-top: 1px solid #ddd; font-weight: bold; background-color: #e8f4f8;">
+                                    <td><strong>Total:</strong></td>
+                                    <td style="text-align: right;"><strong>{{ r.project_marks or '-' }} / 20</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <p style="color: #666;">No detailed breakdown available yet.</p>
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    function toggleDetails(id) {
+        const elem = document.getElementById(id);
+        const rowIdx = id.split('-')[1];
+        const toggle = document.getElementById('toggle-' + rowIdx);
+        
+        if (elem.style.display === 'none') {
+            elem.style.display = 'table-row';
+            toggle.textContent = '▼';
+        } else {
+            elem.style.display = 'none';
+            toggle.textContent = '▶';
+        }
+    }
+
+    const labels = {{ chart_labels | safe }};
+    const dataValues = {{ chart_attendance | safe }};
+
+    // Bold font globally for Chart.js text elements
+    if (Chart && Chart.defaults) {
+        Chart.defaults.font.weight = '700';
+        Chart.defaults.font.size = 12;
+        Chart.defaults.color = '#333';
+    }
+
+    const ctxBar = document.getElementById('attendanceBarChart').getContext('2d');
+    new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Attendance %',
+                data: dataValues,
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    ticks: { font: { weight: 'bold', size: 11 }, color: '#333' },
+                    grid: { display: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: 100,
+                    ticks: { font: { weight: 'bold', size: 11 }, color: '#333' },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { font: { weight: 'bold', size: 12 } }
+                }
+            }
+        }
+    });
+
+    const ctxDonut = document.getElementById('attendanceDonutChart').getContext('2d');
+    new Chart(ctxDonut, {
+        type: 'doughnut',
+        data: {
+            labels: ['Present', 'Absent'],
+            datasets: [{
+                data: [{{ attended_classes }}, {{ absent_classes }}],
+                backgroundColor: ['rgba(40, 167, 69, 0.8)', 'rgba(255, 193, 7, 0.8)']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { font: { weight: 'bold', size: 12 }, color: '#333' }
+                }
+            }
+        }
+    });
+</script>
+
+{% else %}
+    <p>No enrollment, marks, or attendance records found for your account yet.</p>
+{% endif %}
+{% endblock %}
+

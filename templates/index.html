@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="hero">
+    <h2>Welcome to Edu Integrity - Academic Records Portal</h2>
+    <p>
+        Use this portal to manage student registration, internal marks, and attendance,
+        while the database automatically enforces integrity and the AI engine highlights
+        abnormal marks or attendance patterns.
+    </p>
+</section>
+
+{% if profile %}
+<div class="boxed-table-card" style="margin-top: 1rem;">
+    <h3>Logged-in profile</h3>
+    <table class="data-table" style="margin-top: 0.5rem;">
+        <tbody>
+            {% if profile.role == 'ADMIN' %}
+                <tr><th>Admin Name</th><td>{{ profile.name }}</td></tr>
+                <tr><th>Admin ID</th><td>{{ profile.id }}</td></tr>
+                <tr><th>Email</th><td>{{ profile.email }}</td></tr>
+                <tr><th>Institution</th><td>{{ profile.institution }}</td></tr>
+            {% elif profile.role == 'FACULTY' %}
+                <tr><th>Faculty Name</th><td>{{ profile.name }}</td></tr>
+                <tr><th>Faculty ID</th><td>{{ profile.faculty_no }}</td></tr>
+                <tr><th>Email</th><td>{{ profile.email }}</td></tr>
+                <tr><th>Institution</th><td>{{ profile.institution }}</td></tr>
+                <tr><th>Department</th><td>{{ profile.department }}</td></tr>
+            {% elif profile.role == 'STUDENT' %}
+                <tr><th>Student Name</th><td>{{ profile.name }}</td></tr>
+                <tr><th>Register Number</th><td>{{ profile.reg_no }}</td></tr>
+                <tr><th>Email</th><td>{{ profile.email }}</td></tr>
+                <tr><th>Institution</th><td>{{ profile.institution }}</td></tr>
+                <tr><th>Department</th><td>{{ profile.department }}</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<section class="cards">
+    <a class="card" href="{{ url_for('student_registration') }}">
+        <h3>Student Registration</h3>
+        <p>Register new students and update basic academic details.</p>
+    </a>
+    <a class="card" href="{{ url_for('marks_entry') }}">
+        <h3>Faculty Marks Entry</h3>
+        <p>Enter internal assessment marks (Cycle Tests, Project, Assignment).</p>
+    </a>
+    <a class="card" href="{{ url_for('attendance_entry') }}">
+        <h3>Attendance Management</h3>
+        <p>Record total and attended classes; eligibility is auto-calculated.</p>
+    </a>
+    <a class="card" href="{{ url_for('anomaly_dashboard') }}">
+        <h3>Anomaly Detection</h3>
+        <p>View AI-detected abnormal marks and attendance anomalies.</p>
+    </a>
+    <a class="card" href="{{ url_for('audit_log_view') }}">
+        <h3>Audit Log</h3>
+        <p>Track who changed what and when for sensitive records.</p>
+    </a>
+</section>
+{% endblock %}
+

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Daily Attendance Entry{% endblock %}
+{% block content %}
+<h2>Daily Attendance Entry</h2>
+<p>Mark attendance for each day. Faculty and admin can enter attendance for the appropriate class roster.</p>
+
+{% if current_user and current_user.role in ['FACULTY', 'ADMIN'] %}
+<form method="get" class="form-card" id="attendance-filter-form">
+    <div class="form-row">
+        <label for="subject_id">Subject</label>
+        <select id="subject_id" name="subject_id" required onchange="document.getElementById('attendance-filter-form').submit()">
+            {% for sub in subjects_for_faculty %}
+                <option value="{{ sub.subject_id }}" {% if sub.subject_id == selected_subject_id %}selected{% endif %}>
+                    {{ sub.subject_code }} - {{ sub.subject_name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="department">Department</label>
+        <select id="department" name="department" required onchange="document.getElementById('attendance-filter-form').submit()">
+            {% for dep in departments_for_subject %}
+                <option value="{{ dep.department }}" {% if dep.department == selected_department %}selected{% endif %}>
+                    {{ dep.department }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="year">Year</label>
+        <select id="year" name="year" required onchange="document.getElementById('attendance-filter-form').submit()">
+            {% for y in years_for_subject %}
+                <option value="{{ y.year }}" {% if y.year == selected_year %}selected{% endif %}>
+                    Year {{ y.year }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="section">Section</label>
+        <select id="section" name="section" required onchange="document.getElementById('attendance-filter-form').submit()">
+            {% for sec in sections_for_subject %}
+                <option value="{{ sec.section }}" {% if sec.section == selected_section %}selected{% endif %}>
+                    {{ sec.section if sec.section else 'N/A' }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn-primary">Load Class</button>
+</form>
+
+{% if enrollments %}
+<form method="post" class="form-card">
+    <h3>Attendance for {{ selected_department if selected_department else 'All Departments' }}, Section {{ selected_section if selected_section else 'N/A' }}</h3>
+    
+    <div class="form-row" style="margin-bottom: 1.5rem;">
+        <label for="attendance_date"><strong>Class Date:</strong></label>
+        <input type="date" id="attendance_date" name="attendance_date" required>
+        <script>
+            // Set today's date by default
+            document.getElementById('attendance_date').valueAsDate = new Date();
+        </script>
+    </div>
+
+    <input type="hidden" name="section" value="{{ selected_section }}">
+    <input type="hidden" name="department" value="{{ selected_department }}">
+    <input type="hidden" name="year" value="{{ selected_year }}">
+    <input type="hidden" name="subject_id" value="{{ selected_subject_id }}">
+
+    <table class="data-table" style="width: 100%; margin-bottom: 1.5rem;">
+        <thead>
+            <tr>
+                <th>Reg No</th>
+                <th>Student Name</th>
+                <th>Department</th>
+                <th style="text-align: center;">Present</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in enrollments %}
+            <tr>
+                <td>{{ e.reg_no }}</td>
+                <td>{{ e.student_name }}</td>
+                <td>{{ e.student_department }}</td>
+                <td style="text-align: center;">
+                    <input type="hidden" name="enroll_{{ e.enroll_id }}" value="1">
+                    <input type="checkbox" name="present_{{ e.enroll_id }}" value="on" style="width: 20px; height: 20px; cursor: pointer;">
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="display: flex; gap: 0.5rem;">
+        <button type="submit" class="btn-primary">Save Daily Attendance</button>
+        <button type="button" onclick="checkAll()" class="btn-secondary" style="margin-left: 0.5rem;">Mark All Present</button>
+        <button type="button" onclick="uncheckAll()" class="btn-secondary">Mark All Absent</button>
+    </div>
+</form>
+
+<script>
+function checkAll() {
+    const checkboxes = document.querySelectorAll('input[name^="present_"]');
+    checkboxes.forEach(box => box.checked = true);
+}
+
+function uncheckAll() {
+    const checkboxes = document.querySelectorAll('input[name^="present_"]');
+    checkboxes.forEach(box => box.checked = false);
+}
+</script>
+
+<p class="hint">
+    ✓ Select a date and mark students as present/absent for that day.<br>
+    ✓ Submit daily. Faculty can enter attendance every day for their classes.<br>
+    ✓ Total attendance percentage will be calculated automatically for the semester.
+</p>
+{% else %}
+<div class="form-card">
+    <p class="hint" style="color: #999;">Select a subject, department, year, and section to load the class roster.</p>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}
+

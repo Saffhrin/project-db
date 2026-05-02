@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<h2>Login</h2>
+<p>Select your role and enter your credentials to access the system.</p>
+
+<div class="role-selection">
+    <a class="role-card {% if selected_role == 'ADMIN' %}selected{% endif %}" href="{{ url_for('login', role='ADMIN') }}">
+        <div class="role-icon">👨‍💼</div>
+        <h3>Admin</h3>
+        <p>System administrator access</p>
+    </a>
+    <a class="role-card {% if selected_role == 'STUDENT' %}selected{% endif %}" href="{{ url_for('login', role='STUDENT') }}">
+        <div class="role-icon">👨‍🎓</div>
+        <h3>Student</h3>
+        <p>Student portal access</p>
+    </a>
+    <a class="role-card {% if selected_role == 'FACULTY' %}selected{% endif %}" href="{{ url_for('login', role='FACULTY') }}">
+        <div class="role-icon">👩‍🏫</div>
+        <h3>Faculty</h3>
+        <p>Faculty member access</p>
+    </a>
+</div>
+
+<form method="post" class="form-card" id="login-form">
+    <input type="hidden" name="role" value="{{ selected_role }}">
+    <div class="form-row">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required>
+    </div>
+    <div class="form-row">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+    </div>
+    <button type="submit" class="btn-primary">Login</button>
+    <p class="hint">
+        <a href="{{ url_for('forgot_password') }}">Forgot password?</a>
+    </p>
+    <p class="hint">
+        Roles supported: <strong>ADMIN</strong>, <strong>FACULTY</strong>, <strong>STUDENT</strong>.
+        Admin accounts can be created directly in the database in the <code>users</code> table.
+    </p>
+</form>
+{% endblock %}
+

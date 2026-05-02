@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Student Registration{% endblock %}
+{% block content %}
+<h2>Student Registration</h2>
+<form method="post" class="form-card">
+    <div class="form-row">
+        <label for="reg_no">Register Number</label>
+        <input type="text" id="reg_no" name="reg_no" required>
+    </div>
+    <div class="form-row">
+        <label for="name">Student Name</label>
+        <input type="text" id="name" name="name" required>
+    </div>
+    <div class="form-row">
+        <label for="department">Department</label>
+        <input type="text" id="department" name="department" required>
+    </div>
+    <div class="form-row">
+        <label for="year_level">Year</label>
+        <select id="year_level" name="year_level" required>
+            <option value="">Select</option>
+            <option value="1">I</option>
+            <option value="2">II</option>
+            <option value="3">III</option>
+            <option value="4">IV</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="section">Section</label>
+        <input type="text" id="section" name="section">
+    </div>
+    <button type="submit" class="btn-primary">Save Student</button>
+</form>
+{% endblock %}
+

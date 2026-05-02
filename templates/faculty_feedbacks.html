@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Feedback Received{% endblock %}
+{% block content %}
+<h2>Feedback Received</h2>
+<p>Review the feedback submitted by students for each subject and class you handle.</p>
+
+{% if class_options %}
+<form method="get" style="margin:1rem 0 1.5rem; max-width:560px;">
+    <label for="class_key" style="display:block; font-weight:700; color:#111827; margin-bottom:0.5rem;">Choose class to review</label>
+    <select name="class_key" id="class_key" onchange="this.form.submit()" style="width:100%; padding:0.9rem 1rem; border:1px solid #cbd5e1; border-radius:0.85rem; background:#f8fafc; color:#111827; font-size:0.95rem;">
+        {% for cls in class_options %}
+            <option value="{{ cls.key }}" {% if selected_class and cls.key == selected_class.key %}selected{% endif %}>
+                {{ cls.label }}
+            </option>
+        {% endfor %}
+    </select>
+</form>
+{% endif %}
+
+{% if selected_class %}
+<p style="margin-top:0; color:#475569;">Showing feedback for {{ selected_class.label }}.</p>
+{% endif %}
+
+{% if subjects %}
+<div class="stats-panel" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+    <div class="stat-card" style="background:#ffffff; border:1px solid #d1d5db; border-radius:1rem; padding:1rem; color:#111827;">
+        <div style="font-size:0.9rem; color:#4b5563;">Subjects handled</div>
+        <div style="font-size:2rem; font-weight:700; margin-top:0.5rem; color:#111827;">{{ totals.total_subjects }}</div>
+    </div>
+    <div class="stat-card" style="background:#ffffff; border:1px solid #d1d5db; border-radius:1rem; padding:1rem; color:#111827;">
+        <div style="font-size:0.9rem; color:#4b5563;">Distinct class groups</div>
+        <div style="font-size:2rem; font-weight:700; margin-top:0.5rem; color:#111827;">{{ totals.total_classes }}</div>
+    </div>
+    <div class="stat-card" style="background:#ffffff; border:1px solid #d1d5db; border-radius:1rem; padding:1rem; color:#111827;">
+        <div style="font-size:0.9rem; color:#4b5563;">Total feedbacks received</div>
+        <div style="font-size:2rem; font-weight:700; margin-top:0.5rem; color:#111827;">{{ totals.total_feedbacks }}</div>
+    </div>
+</div>
+
+{% for subject in subjects %}
+<section style="margin-bottom:1.75rem; background:#ffffff; border:1px solid #d1d5db; border-radius:1rem; padding:1.25rem;">
+    <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:1rem; align-items:center; margin-bottom:1rem;">
+        <div>
+            <h3 style="margin:0;">{{ subject.subject_code }} - {{ subject.subject_name }}</h3>
+            <p style="margin:0.35rem 0 0; color:#475569;">Feedback received for {{ subject.classes | length }} class{{ 'es' if subject.classes | length != 1 else '' }}</p>
+        </div>
+        <div style="font-weight:700; color:#111827;">Subject feedback count: {{ subject.feedback_count }}</div>
+    </div>
+
+    {% for cls in subject.classes %}
+    <div style="margin-bottom:1.25rem; padding:1rem; border:1px solid #e2e8f0; border-radius:0.85rem; background:#f8fafc;">
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.75rem; align-items:center; margin-bottom:0.75rem;">
+            <div style="font-weight:700;">Class: Year {{ cls.year_level }} / Section {{ cls.section }} / {{ cls.department or 'Department N/A' }}</div>
+            <div style="color:#1d4ed8; font-weight:700;">{{ cls.feedback_count }} feedback{{ 's' if cls.feedback_count != 1 else '' }}</div>
+        </div>
+
+        {% if cls.feedback_count > 0 %}
+        <div style="overflow-x:auto;">
+            <table class="data-table" style="width:100%; border-collapse:collapse; min-width:900px;">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Reg. No.</th>
+                        <th>Teaching</th>
+                        <th>Knowledge</th>
+                        <th>Communication</th>
+                        <th>Preparation</th>
+                        <th>Responsiveness</th>
+                        <th>Punctuality</th>
+                        <th>Overall</th>
+                        <th>Comments</th>
+                        <th>Submitted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fb in cls.feedbacks %}
+                    <tr>
+                        <td>{{ fb.student_name }}</td>
+                        <td>{{ fb.reg_no }}</td>
+                        <td>{{ fb.teaching_quality or 'N/A' }}</td>
+                        <td>{{ fb.subject_knowledge or 'N/A' }}</td>
+                        <td>{{ fb.communication or 'N/A' }}</td>
+                        <td>{{ fb.preparation or 'N/A' }}</td>
+                        <td>{{ fb.responsiveness or 'N/A' }}</td>
+                        <td>{{ fb.punctuality or 'N/A' }}</td>
+                        <td>{{ fb.overall_rating or 'N/A' }}</td>
+                        <td style="max-width:220px; white-space:pre-wrap; word-break:break-word;">{{ fb.comments or '-' }}</td>
+                        <td>{{ fb.submitted_at.strftime('%Y-%m-%d %H:%M') if fb.submitted_at else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="margin:0; color:#475569;">No feedback has been submitted yet for this class.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</section>
+{% endfor %}
+
+{% else %}
+<p>No classes found for your faculty assignments yet.</p>
+{% endif %}
+{% endblock %}

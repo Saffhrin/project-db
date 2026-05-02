@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Sign up{% endblock %}
+{% block content %}
+<h2>Create Account</h2>
+<form method="post" class="form-card">
+    <div class="form-row">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required>
+    </div>
+    <div class="form-row">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+    </div>
+    <div class="form-row">
+        <label for="role">Role</label>
+        <select id="role" name="role" required>
+            <option value="">Select role</option>
+            <option value="STUDENT">Student</option>
+            <option value="FACULTY">Faculty</option>
+            <option value="ADMIN">Admin</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="student_id">Link to Student (for Student role)</label>
+        <select id="student_id" name="student_id">
+            <option value="">Select student</option>
+            {% for s in students %}
+                <option value="{{ s.student_id }}">{{ s.reg_no }} - {{ s.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="faculty_id">Link to Faculty (for Faculty role)</label>
+        <select id="faculty_id" name="faculty_id">
+            <option value="">Select faculty</option>
+            {% for f in faculty %}
+                <option value="{{ f.faculty_id }}">{{ f.emp_no }} - {{ f.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn-primary">Sign up</button>
+    <p class="hint">
+        After signing up, use the <a href="{{ url_for('login') }}">Login</a> page to access the system.
+        (For a real system you would hash passwords; here they are stored plain for simplicity.)
+    </p>
+</form>
+{% endblock %}
+

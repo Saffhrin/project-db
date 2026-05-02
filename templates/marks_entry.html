@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% block title %}Marks Entry (Question-wise){% endblock %}
+{% block content %}
+<h2>Marks Entry - Question Wise Details</h2>
+<p>Enter marks question-wise for cycle tests and component-wise for projects. The system will automatically calculate totals and convert to scaled marks.</p>
+
+{% if current_user and current_user.role in ['ADMIN', 'FACULTY'] %}
+    <p><strong>Report:</strong> <a href="{{ url_for('marks_all_view') }}">View class marks (all/faculty-filtered)</a></p>
+{% endif %}
+
+{% if current_user and current_user.role in ['ADMIN', 'FACULTY'] %}
+<form method="get" class="form-card" id="marks-filter-form">
+    {% if current_user.role == 'FACULTY' %}
+    <div class="form-row">
+        <label for="subject_id">Subject</label>
+        <select id="subject_id" name="subject_id" required onchange="document.getElementById('marks-filter-form').submit()">
+            {% for sub in subjects_for_faculty %}
+                <option value="{{ sub.subject_id }}" {% if sub.subject_id == selected_subject_id %}selected{% endif %}>
+                    {{ sub.subject_code }} - {{ sub.subject_name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endif %}
+    <div class="form-row">
+        <label for="department">Department</label>
+        <select id="department" name="department" required onchange="document.getElementById('marks-filter-form').submit()">
+            {% for dep in departments_for_subject %}
+                <option value="{{ dep.department }}" {% if dep.department == selected_department %}selected{% endif %}>
+                    {{ dep.department }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="year">Year</label>
+        <select id="year" name="year" required onchange="document.getElementById('marks-filter-form').submit()">
+            {% for y in years_for_subject %}
+                <option value="{{ y.year }}" {% if y.year == selected_year %}selected{% endif %}>
+                    Year {{ y.year }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="section">Section</label>
+        <select id="section" name="section" required onchange="document.getElementById('marks-filter-form').submit()">
+            {% for sec in sections_for_subject %}
+                <option value="{{ sec.section }}" {% if sec.section == selected_section %}selected{% endif %}>
+                    {{ sec.section if sec.section else 'N/A' }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn-primary">Load</button>
+</form>
+{% endif %}
+
+<form method="post" class="form-card">
+    <div class="form-row">
+        <label for="enroll_id">Student &amp; Subject ({{ selected_department if selected_department else 'All Departments' }}, Section {{ selected_section if selected_section else 'N/A' }})</label>
+        <select id="enroll_id" name="enroll_id" required onchange="focusFirstQuestion()">
+            <option value="">Select</option>
+            {% for e in enrollments %}
+                <option value="{{ e.enroll_id }}">
+                    {{ e.subject_code }} - {{ e.subject_name }} | {{ e.reg_no }} - {{ e.student_name }} | {{ e.student_department }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    {% if current_user and current_user.role in ['ADMIN', 'FACULTY'] %}
+        <input type="hidden" name="section" value="{{ selected_section }}">
+        <input type="hidden" name="department" value="{{ selected_department }}">
+        <input type="hidden" name="year" value="{{ selected_year }}">
+    {% endif %}
+    {% if current_user and current_user.role == 'FACULTY' %}
+        <input type="hidden" name="subject_id" value="{{ selected_subject_id }}">
+    {% endif %}
+
+    <!-- CYCLE TEST 1 -->
+    <div class="detail-section">
+        <h3>Cycle Test 1 (50 marks total → 15 marks scaled)</h3>
+        <p class="hint">Enter marks for 5 questions, 10 marks each. Total: 50 → converted to 15 marks</p>
+        <div class="form-grid-5">
+            {% for q in range(1, 6) %}
+            <div class="form-row">
+                <label for="ct1_q{{ q }}">Question {{ q }} (10 marks)</label>
+                <input type="number" step="0.5" id="ct1_q{{ q }}" name="ct1_q{{ q }}" min="0" max="10" placeholder="0-10" value="0" required>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="form-row" style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; margin-top: 10px;">
+            <strong>Total CT1: <span id="ct1_total">0.00</span> / 50 → Scaled: <span id="ct1_scaled">0.00</span> / 15</strong>
+        </div>
+    </div>
+
+    <!-- CYCLE TEST 2 -->
+    <div class="detail-section">
+        <h3>Cycle Test 2 (50 marks total → 15 marks scaled)</h3>
+        <p class="hint">Enter marks for 5 questions, 10 marks each. Total: 50 → converted to 15 marks</p>
+        <div class="form-grid-5">
+            {% for q in range(1, 6) %}
+            <div class="form-row">
+                <label for="ct2_q{{ q }}">Question {{ q }} (10 marks)</label>
+                <input type="number" step="0.5" id="ct2_q{{ q }}" name="ct2_q{{ q }}" min="0" max="10" placeholder="0-10" value="0" required>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="form-row" style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; margin-top: 10px;">
+            <strong>Total CT2: <span id="ct2_total">0.00</span> / 50 → Scaled: <span id="ct2_scaled">0.00</span> / 15</strong>
+        </div>
+    </div>
+
+    <!-- PROJECT -->
+    <div class="detail-section">
+        <h3>Project (20 marks total)</h3>
+        <p class="hint">Enter marks for each component. Total should be 20 marks</p>
+        <div class="form-grid-3">
+            <div class="form-row">
+                <label for="project_impl">Implementation (8 marks)</label>
+                <input type="number" step="0.5" id="project_impl" name="project_impl" min="0" max="8" placeholder="0-8" value="0" required>
+            </div>
+            <div class="form-row">
+                <label for="project_research">Research Paper (8 marks)</label>
+                <input type="number" step="0.5" id="project_research" name="project_research" min="0" max="8" placeholder="0-8" value="0" required>
+            </div>
+            <div class="form-row">
+                <label for="project_review">Final Review (4 marks)</label>
+                <input type="number" step="0.5" id="project_review" name="project_review" min="0" max="4" placeholder="0-4" value="0" required>
+            </div>
+        </div>
+        <div class="form-row" style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; margin-top: 10px;">
+            <strong>Total Project: <span id="project_total">0.00</span> / 20</strong>
+        </div>
+    </div>
+
+    <!-- ASSIGNMENT -->
+    <div class="detail-section">
+        <h3>Assignment (10 marks)</h3>
+        <div class="form-row">
+            <label for="assignment_marks">Total Assignment Marks</label>
+            <input type="number" step="0.5" id="assignment_marks" name="assignment_marks" min="0" max="10" placeholder="0-10" required value="0">
+        </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="detail-section" style="background-color: #e8f4f8; padding: 15px; border-radius: 4px; border-left: 4px solid #0066cc;">
+        <h3>Summary</h3>
+        <table class="data-table">
+            <tr>
+                <td><strong>Cycle Test 1 (Scaled)</strong></td>
+                <td><span id="summary_ct1">0.00</span> / 15</td>
+            </tr>
+            <tr>
+                <td><strong>Cycle Test 2 (Scaled)</strong></td>
+                <td><span id="summary_ct2">0.00</span> / 15</td>
+            </tr>
+            <tr>
+                <td><strong>Project</strong></td>
+                <td><span id="summary_project">0.00</span> / 20</td>
+            </tr>
+            <tr>
+                <td><strong>Assignment</strong></td>
+                <td><span id="summary_assignment">0.00</span> / 10</td>
+            </tr>
+            <tr style="background-color: #fff3cd;">
+                <td><strong>INTERNAL TOTAL</strong></td>
+                <td><strong><span id="summary_total">0.00</span> / 60</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="form-row">
+        <label for="updated_by">Updated By (Faculty User)</label>
+        <input type="text" id="updated_by" name="updated_by" placeholder="faculty_username">
+    </div>
+    <button type="submit" class="btn-primary">Save Marks</button>
+</form>
+
+<style>
+    .detail-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #444;
+        border-radius: 4px;
+        background-color: #1e1e1e;
+    }
+    
+    .detail-section h3 {
+        color: #e8e8e8;
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .detail-section .hint {
+        color: #b0b0b0;
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+    
+    .form-grid-5 {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+    }
+    
+    .form-grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+    
+    .form-row {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .form-row label {
+        color: #e8e8e8;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    
+    .form-row input[type="number"],
+    .form-row input[type="text"],
+    .form-row select {
+        background-color: #2d2d2d;
+        color: #ffffff;
+        border: 1px solid #555;
+        padding: 8px 10px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    
+    .form-row input[type="number"]::placeholder,
+    .form-row input[type="text"]::placeholder {
+        color: #888;
+    }
+    
+    .form-row input[type="number"]:focus,
+    .form-row input[type="text"]:focus,
+    .form-row select:focus {
+        outline: none;
+        border-color: #0066cc;
+        box-shadow: 0 0 5px rgba(0, 102, 204, 0.3);
+    }
+    
+    .form-row[style*="background-color: #f5f5f5"] {
+        background-color: #252525 !important;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+    
+    .form-row[style*="background-color: #f5f5f5"] strong {
+        color: #e8e8e8;
+        font-weight: 600;
+    }
+    
+    .form-row[style*="background-color: #e8f4f8"] {
+        background-color: #253545 !important;
+        padding: 15px;
+        border-radius: 4px;
+        border-left: 4px solid #0066cc;
+    }
+    
+    .detail-section[style*="background-color: #e8f4f8"] {
+        background-color: #253545 !important;
+    }
+    
+    .detail-section[style*="background-color: #e8f4f8"] h3 {
+        color: #e8e8e8;
+    }
+    
+    .data-table {
+        background-color: #1e1e1e;
+        border-collapse: collapse;
+        width: 100%;
+    }
+    
+    .data-table tr {
+        border-bottom: 1px solid #444;
+    }
+    
+    .data-table td {
+        padding: 10px;
+        color: #e8e8e8;
+        font-weight: 500;
+    }
+    
+    .data-table tr[style*="background-color"] {
+        background-color: #2d2d2d !important;
+    }
+    
+    .data-table tr:last-child {
+        background-color: #2a2a1a !important;
+    }
+    
+    .form-card {
+        background-color: #1e1e1e;
+        border: 1px solid #444;
+    }
+    
+    .form-card h2 {
+        color: #e8e8e8;
+    }
+    
+    .form-card p {
+        color: #b0b0b0;
+    }
+    
+    .btn-primary {
+        background-color: #0066cc;
+        color: #ffffff;
+        font-weight: 600;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0052a3;
+    }
+    
+    @media (max-width: 768px) {
+        .form-grid-5 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .form-grid-3 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    function updateTotals() {
+        // Cycle Test 1
+        let ct1_total = 0;
+        for (let i = 1; i <= 5; i++) {
+            let val = parseFloat(document.getElementById('ct1_q' + i).value) || 0;
+            ct1_total += val;
+        }
+        let ct1_scaled = (ct1_total / 50) * 15;
+        document.getElementById('ct1_total').textContent = ct1_total.toFixed(2);
+        document.getElementById('ct1_scaled').textContent = ct1_scaled.toFixed(2);
+        document.getElementById('summary_ct1').textContent = ct1_scaled.toFixed(2);
+
+        // Cycle Test 2
+        let ct2_total = 0;
+        for (let i = 1; i <= 5; i++) {
+            let val = parseFloat(document.getElementById('ct2_q' + i).value) || 0;
+            ct2_total += val;
+        }
+        let ct2_scaled = (ct2_total / 50) * 15;
+        document.getElementById('ct2_total').textContent = ct2_total.toFixed(2);
+        document.getElementById('ct2_scaled').textContent = ct2_scaled.toFixed(2);
+        document.getElementById('summary_ct2').textContent = ct2_scaled.toFixed(2);
+
+        // Project
+        let project_impl = parseFloat(document.getElementById('project_impl').value) || 0;
+        let project_research = parseFloat(document.getElementById('project_research').value) || 0;
+        let project_review = parseFloat(document.getElementById('project_review').value) || 0;
+        let project_total = project_impl + project_research + project_review;
+        document.getElementById('project_total').textContent = project_total.toFixed(2);
+        document.getElementById('summary_project').textContent = project_total.toFixed(2);
+
+        // Assignment
+        let assignment = parseFloat(document.getElementById('assignment_marks').value) || 0;
+        document.getElementById('summary_assignment').textContent = assignment.toFixed(2);
+
+        // Grand Total
+        let grand_total = ct1_scaled + ct2_scaled + project_total + assignment;
+        document.getElementById('summary_total').textContent = grand_total.toFixed(2);
+    }
+
+    function focusFirstQuestion() {
+        document.getElementById('ct1_q1').focus();
+    }
+
+    // Update totals on input change
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+        input.addEventListener('input', updateTotals);
+    });
+
+    // Initial calculation
+    updateTotals();
+</script>
+
+<p class="hint">
+    Validation rules: each component must be within its maximum and internal total must not exceed 60.
+    If abnormal low marks are found (below average and out of normal range), they will appear in the
+    <a href="{{ url_for('anomaly_dashboard') }}">Anomaly Dashboard</a> after the AI process runs.
+</p>
+{% endblock %}
+

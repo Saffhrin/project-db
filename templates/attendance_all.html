@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}All Attendance{% endblock %}
+{% block content %}
+<h2>All Attendance Records</h2>
+<p>Admin view: all attendance records across all enrollments.</p>
+<form method="get" class="form-card" style="margin-bottom: 1rem;">
+    <div class="form-grid-2">
+        <div class="form-row">
+            <label for="department">Department</label>
+            <select id="department" name="department" onchange="this.form.submit()">
+                <option value="">All Departments</option>
+                {% for dep in departments %}
+                    <option value="{{ dep }}" {% if dep == selected_department %}selected{% endif %}>{{ dep }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="section">Section</label>
+            <select id="section" name="section" onchange="this.form.submit()">
+                <option value="">All Sections</option>
+                {% for sec in sections %}
+                    <option value="{{ sec }}" {% if sec == selected_section %}selected{% endif %}>{{ sec or 'N/A' }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="form-row" style="margin-top: 0.5rem;">
+        <button type="submit" class="btn-primary">Apply Filter</button>
+    </div>
+</form>
+<p style="margin-bottom: 1rem;">
+    <a class="btn-secondary" href="{{ url_for('attendance_all_download', department=selected_department, section=selected_section) }}">Download Attendance CSV</a>
+</p>
+<div class="boxed-table-card">
+    <div class="table-responsive">
+        <table class="data-table">
+        <thead>
+            <tr>
+                <th>Attendance ID</th>
+                <th>Reg No</th>
+                <th>Student Name</th>
+                <th>Department</th>
+                <th>Section</th>
+                <th>Subject</th>
+                <th>Subject Name</th>
+                <th>Faculty</th>
+                <th>Last Date</th>
+                <th>Attended</th>
+                <th>Term Total</th>
+                <th>Current %</th>
+                <th>Δ vs Prev</th>
+                <th>Last Updated</th>
+                <th>Updated By</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if attendance %}
+                {% for a in attendance %}
+                    <tr>
+                        <td><strong>{{ a.attendance_id }}</strong></td>
+                        <td>{{ a.reg_no }}</td>
+                        <td>{{ a.student_name }}</td>
+                        <td>{{ a.student_department }}</td>
+                        <td>{{ a.student_section }}</td>
+                        <td>{{ a.subject_code }}</td>
+                        <td>{{ a.subject_name }}</td>
+                        <td>{{ a.faculty_name }} ({{ a.faculty_emp_no }})</td>
+                        <td>{{ a.last_attendance_date or 'N/A' }}</td>
+                        <td>{{ a.attended_sum }}</td>
+                        <td>{{ a.term_total }}</td>
+                        <td>{{ '%.2f'|format(a.current_pct or 0) }}%</td>
+                        <td>
+                            {% if a.delta_pct is not none %}
+                                {% if a.delta_pct > 0 %}
+                                    <span style="color: #22c55e;">+{{ '%.2f'|format(a.delta_pct) }}%</span>
+                                {% elif a.delta_pct < 0 %}
+                                    <span style="color: #ef4444;">{{ '%.2f'|format(a.delta_pct) }}%</span>
+                                {% else %}
+                                    <span>0.00%</span>
+                                {% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ a.last_updated_at }}</td>
+                        <td>{{ a.last_updated_by }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="13">No attendance records found.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

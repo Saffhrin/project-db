@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Audit Log{% endblock %}
+{% block content %}
+<h2>Audit Log</h2>
+<p>History of updates on sensitive tables (marks, attendance).</p>
+
+{% if logs %}
+<table class="data-table">
+    <thead>
+    <tr>
+        <th>Table</th>
+        <th>Operation</th>
+        <th>Record ID</th>
+        <th>Changed By</th>
+        <th>Changed At</th>
+        <th>Old Values</th>
+        <th>New Values</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for log in logs %}
+        <tr>
+            <td>{{ log.table_name }}</td>
+            <td>{{ log.operation }}</td>
+            <td>{{ log.record_id }}</td>
+            <td>{{ log.changed_by }}</td>
+            <td>{{ log.changed_at }}</td>
+            <td>{{ log.old_values }}</td>
+            <td>{{ log.new_values }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+    <p>No audit records yet.</p>
+{% endif %}
+{% endblock %}
+

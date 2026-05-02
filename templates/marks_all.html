@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}All Marks{% endblock %}
+{% block content %}
+<h2>All Student Marks</h2>
+<p>Admin view: all marks across all enrollments.</p>
+<form method="get" class="form-card" style="margin-bottom: 1rem;">
+    <div class="form-grid-2">
+        <div class="form-row">
+            <label for="department">Department</label>
+            <select id="department" name="department" onchange="this.form.submit()">
+                <option value="">All Departments</option>
+                {% for dep in departments %}
+                    <option value="{{ dep }}" {% if dep == selected_department %}selected{% endif %}>{{ dep }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="section">Section</label>
+            <select id="section" name="section" onchange="this.form.submit()">
+                <option value="">All Sections</option>
+                {% for sec in sections %}
+                    <option value="{{ sec }}" {% if sec == selected_section %}selected{% endif %}>{{ sec or 'N/A' }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="form-row" style="margin-top: 0.5rem;">
+        <button type="submit" class="btn-primary">Apply Filter</button>
+    </div>
+</form>
+<p style="margin-bottom: 1rem;">
+    <a class="btn-secondary" href="{{ url_for('marks_all_download', department=selected_department, section=selected_section) }}">Download Marks CSV</a>
+</p>
+<div class="boxed-table-card">
+    <div class="table-responsive">
+        <table class="data-table">
+        <thead>
+            <tr>
+                <th>Mark ID</th>
+                <th>Reg No</th>
+                <th>Student Name</th>
+                <th>Department</th>
+                <th>Section</th>
+                <th>Subject</th>
+                <th>Subject Name</th>
+                <th>Faculty</th>
+                <th>Cycle 1</th>
+                <th>Cycle 2</th>
+                <th>Project</th>
+                <th>Assignment</th>
+                <th>Split</th>
+                <th>Last Update</th>
+                <th>Updated By</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if marks %}
+                {% for m in marks %}
+                    <tr>
+                        <td><strong>{{ m.mark_id }}</strong></td>
+                        <td>{{ m.reg_no }}</td>
+                        <td>{{ m.student_name }}</td>
+                        <td>{{ m.student_department }}</td>
+                        <td>{{ m.student_section }}</td>
+                        <td>{{ m.subject_code }}</td>
+                        <td>{{ m.subject_name }}</td>
+                        <td>{{ m.faculty_name }} ({{ m.faculty_emp_no }})</td>
+                        <td>{{ m.cycle_test_1 }}</td>
+                        <td>{{ m.cycle_test_2 }}</td>
+                        <td>{{ m.project_marks }}</td>
+                        <td>{{ m.assignment_marks }}</td>
+                        <td>
+                            <details>
+                                <summary>View split</summary>
+                                <div style="margin-top: 6px; font-size: 0.9em;">
+                                    <strong>CT1:</strong>
+                                    {% if m.ct1_questions %}
+                                        {% for q in m.ct1_questions %}
+                                            Q{{ q.question_number }}:{{ q.marks_obtained }}/{{ q.max_marks }}{% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                    {% else %}N/A{% endif %}
+                                </div>
+                                <div style="margin-top: 4px; font-size: 0.9em;">
+                                    <strong>CT2:</strong>
+                                    {% if m.ct2_questions %}
+                                        {% for q in m.ct2_questions %}
+                                            Q{{ q.question_number }}:{{ q.marks_obtained }}/{{ q.max_marks }}{% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                    {% else %}N/A{% endif %}
+                                </div>
+                                <div style="margin-top: 4px; font-size: 0.9em;">
+                                    <strong>Project:</strong>
+                                    {% if m.project_components %}
+                                        {% for c in m.project_components %}
+                                            {{ c.component_name }}:{{ c.marks_obtained }}/{{ c.max_marks }}{% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                    {% else %}N/A{% endif %}
+                                </div>
+                            </details>
+                        </td>
+                        <td>{{ m.last_updated_at }}</td>
+                        <td>{{ m.last_updated_by }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="14">No marks found.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

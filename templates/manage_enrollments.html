@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Enrollments{% endblock %}
+
+{% block content %}
+<style>
+    .enrollment-header {
+        margin-bottom: 2rem;
+    }
+    
+    .enrollment-header h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: #f9fafb;
+    }
+    
+    .enrollment-header p {
+        font-size: 1rem;
+        color: #d1d5db;
+        line-height: 1.6;
+    }
+    
+    .table-container {
+        background: #111827;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        border-radius: 0.75rem;
+        overflow: hidden;
+        margin: 2rem 0;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    .manage-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+    
+    .manage-table thead {
+        background: #1f2937;
+        border-bottom: 2px solid rgba(148, 163, 184, 0.3);
+    }
+    
+    .manage-table thead th {
+        padding: 1rem 1.25rem;
+        text-align: left;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #e5e7eb;
+        white-space: nowrap;
+    }
+    
+    .manage-table tbody td {
+        padding: 0.95rem 1.25rem;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        font-size: 0.95rem;
+        color: #d1d5db;
+    }
+    
+    .manage-table tbody tr:hover {
+        background: rgba(148, 163, 184, 0.1);
+    }
+    
+    .manage-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .student-cell {
+        min-width: 140px;
+    }
+    
+    .subject-cell {
+        min-width: 150px;
+    }
+    
+    .faculty-cell {
+        min-width: 140px;
+    }
+    
+    .action-cell {
+        text-align: center;
+        min-width: 110px;
+    }
+    
+    .btn-unenroll {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        white-space: nowrap;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .button-group .btn {
+        padding: 0.65rem 1.25rem;
+        font-size: 0.95rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .alert {
+        margin-bottom: 1.5rem;
+        padding: 1rem 1.25rem;
+        border-radius: 0.5rem;
+    }
+    
+    .no-data {
+        padding: 2rem;
+        text-align: center;
+        color: #9ca3af;
+    }
+</style>
+
+<div class="enrollment-header">
+    <h2>Manage Student Enrollments</h2>
+    <p>View and remove incorrect enrollments. Deleting an enrollment will also remove associated marks and attendance records.</p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            {% if category == 'danger' %}
+                <div class="alert alert-danger" role="alert">
+                    <strong>Error:</strong> {{ message }}
+                </div>
+            {% elif category == 'success' %}
+                <div class="alert alert-success" role="alert">
+                    <strong>Success:</strong> {{ message }}
+                </div>
+            {% else %}
+                <div class="alert alert-warning" role="alert">
+                    {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="table-container">
+    <div class="table-responsive">
+        <table class="manage-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">Student Reg No</th>
+                    <th style="width: 12%;">Student Name</th>
+                    <th style="width: 10%;">Department</th>
+                    <th style="width: 8%;">Section</th>
+                    <th style="width: 10%;">Subject Code</th>
+                    <th style="width: 15%;">Subject Name</th>
+                    <th style="width: 10%;">Faculty Emp No</th>
+                    <th style="width: 12%;">Faculty Name</th>
+                    <th style="width: 6%;">Semester</th>
+                    <th style="width: 7%; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if enrollments %}
+                    {% for enrollment in enrollments %}
+                        <tr>
+                            <td class="student-cell"><strong>{{ enrollment['reg_no'] }}</strong></td>
+                            <td>{{ enrollment['student_name'] }}</td>
+                            <td>{{ enrollment['student_department'] or '—' }}</td>
+                            <td>{{ enrollment['student_section'] or '—' }}</td>
+                            <td><code>{{ enrollment['subject_code'] }}</code></td>
+                            <td>{{ enrollment['subject_name'] }}</td>
+                            <td>{{ enrollment['emp_no'] }}</td>
+                            <td>{{ enrollment['faculty_name'] }}</td>
+                            <td style="text-align: center;"><strong>{{ enrollment['semester'] }}</strong></td>
+                            <td class="action-cell">
+                                <form method="POST" style="display: inline;">
+                                    <input type="hidden" name="enroll_id" value="{{ enrollment['enroll_id'] }}">
+                                    <button type="submit" class="btn btn-sm btn-danger btn-unenroll" onclick="return confirm('Are you sure you want to unenroll {{ enrollment['student_name'] }} from {{ enrollment['subject_name'] }}?\n\nThis will also delete associated marks and attendance records.');">
+                                        ✖ Unenroll
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="10" class="no-data">
+                            <p>No enrollments found</p>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="button-group">
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">← Back to Home</a>
+    <a href="{{ url_for('enrollment_registration') }}" class="btn btn-primary">+ Create New Enrollment</a>
+</div>
+
+{% endblock %}

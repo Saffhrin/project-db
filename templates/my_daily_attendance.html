@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}My Daily Attendance{% endblock %}
+{% block content %}
+<h2>My Daily Attendance</h2>
+<p><strong>Official attendance %</strong> and <strong>eligibility</strong> use present sessions recorded out of <strong>{{ term_class_total }}</strong> classes per subject.</p>
+<p style="margin-bottom: 1rem;">
+    <a class="btn-secondary" href="{{ url_for('my_daily_attendance_download') }}">Download My Attendance CSV</a>
+</p>
+
+{% if attendance_data %}
+    {% for subject_key, data in attendance_data.items() %}
+    <div class="form-card" style="margin-bottom: 2rem;">
+        <h3 style="margin-top: 0; color: #e8e8e8;">{{ data.subject_code }} — {{ data.subject_name }}</h3>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: center; margin-bottom: 0.5rem; padding: 0.75rem 1rem; background: rgba(255,255,255,0.05); border-radius: 0.5rem; border: 1px solid rgba(148,163,184,0.35);">
+            <span style="color: #cbd5e1;"><strong style="color: #e8e8e8;">Sessions (present / term)</strong>
+                <span style="font-weight: 600; color: #e8e8e8;">{{ data.attended_sessions_total }} / {{ term_class_total }}</span>
+            </span>
+            <span style="color: #cbd5e1;"><strong style="color: #e8e8e8;">Attendance % (of full term)</strong>
+                {% if data.record_attendance_pct is not none %}
+                    <span style="color: {% if data.record_attendance_pct >= eligibility_threshold_pct %}#86efac{% else %}#fcd34d{% endif %}; font-weight: 600;">{{ '%.2f'|format(data.record_attendance_pct) }}%</span>
+                {% else %}
+                    <span style="color: #64748b;">—</span>
+                {% endif %}
+            </span>
+            <span style="color: #cbd5e1;"><strong style="color: #e8e8e8;">Eligibility</strong>
+                {% if data.eligibility %}
+                    {% set elig = data.eligibility|string|upper %}
+                    {% if elig.startswith('DEBAR') or 'NOT ELIGIBLE' in elig %}
+                        <span style="color: #fca5a5; font-weight: 600;">{{ data.eligibility }}</span>
+                    {% else %}
+                        <span style="color: #86efac; font-weight: 600;">{{ data.eligibility }}</span>
+                    {% endif %}
+                {% else %}
+                    <span style="color: #64748b;">—</span>
+                {% endif %}
+            </span>
+        </div>
+        <p style="margin: 0 0 1rem 0; font-size: 0.85rem; color: #94a3b8;">Eligibility is <strong>ELIGIBLE</strong> when this percentage is at least {{ '%.0f'|format(eligibility_threshold_pct) }}%; otherwise <strong>DEBARRED</strong>.</p>
+
+        {% if data.summary and data.summary.sessions_marked > 0 %}
+        <h4 style="color: #cbd5e1; font-size: 0.95rem; margin-bottom: 0.5rem;">Course-wise attendance (eligibility uses {{ data.summary.term_total }} sessions per subject)</h4>
+        <table class="data-table" style="width: 100%; margin-bottom: 1.25rem;">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th style="text-align: center;">Term sessions</th>
+                    <th style="text-align: center;">Marked</th>
+                    <th style="text-align: center;">Present</th>
+                    <th style="text-align: center;">Absent (marked)</th>
+                    <th style="text-align: center;">% of term (eligibility)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ data.subject_code }}</td>
+                    <td>{{ data.subject_name }}</td>
+                    <td style="text-align: center;">{{ data.summary.term_total }}</td>
+                    <td style="text-align: center;">{{ data.summary.sessions_marked }}</td>
+                    <td style="text-align: center;">{{ data.summary.present_sessions }}</td>
+                    <td style="text-align: center;">{{ data.summary.absent_marked }}</td>
+                    <td style="text-align: center; font-weight: 600;">
+                        {{ '%.2f'|format(data.summary.term_pct) }}%
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if data.monthly_rows %}
+        <h4 style="color: #cbd5e1; font-size: 0.95rem; margin-bottom: 0.5rem;">Cumulative attendance by month (sessions)</h4>
+        <table class="data-table" style="width: 100%; margin-bottom: 1.25rem;">
+            <thead>
+                <tr>
+                    <th>Month / Year</th>
+                    <th style="text-align: center;">Present</th>
+                    <th style="text-align: center;">Absent</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data.monthly_rows %}
+                <tr>
+                    <td>{{ row.label }}</td>
+                    <td style="text-align: center;">{{ row.present }}</td>
+                    <td style="text-align: center;">{{ row.absent }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if data.attended_sessions_total == 0 %}
+        <p style="color: #94a3b8; margin-top: 0.5rem;">No attendance has been recorded for this subject yet.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+<div class="form-card">
+    <p style="color: #94a3b8;">You are not enrolled in any subjects yet. Once enrolled, your daily attendance will appear here.</p>
+</div>
+{% endif %}
+
+<div class="form-card" style="background: rgba(14, 165, 233, 0.12); border-left: 4px solid #38bdf8;">
+    <h4 style="margin-top: 0; color: #7dd3fc;">How the numbers relate</h4>
+    <ul style="margin: 0; padding-left: 1.5rem; line-height: 1.8; color: #cbd5e1;">
+        <li><strong>Official % (of full term):</strong> (present sessions recorded ÷ {{ term_class_total }}) × 100 per subject.</li>
+        <li><strong>Eligibility:</strong> ELIGIBLE when official term % ≥ {{ '%.0f'|format(eligibility_threshold_pct) }}%; otherwise DEBARRED.</li>
+    </ul>
+</div>
+
+<p style="text-align: center; color: #94a3b8; margin-top: 2rem;">
+    <a href="{{ url_for('my_performance') }}" style="color: #38bdf8; text-decoration: none;">← Back to My Marks & Performance</a>
+</p>
+
+{% endblock %}

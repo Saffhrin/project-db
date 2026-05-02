@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Faculty Timetable{% endblock %}
+{% block content %}
+<h2>Class Timetable</h2>
+<p>Manage and view your classes per subject/section. Use this form to add or edit timetable slots.</p>
+
+<form action="{{ url_for('faculty_timetable') }}" method="post" style="margin-bottom: 1rem; background:#fff; padding: 1rem; border:1px solid #ccc; border-radius:8px;">
+    <input type="hidden" name="entry_id" id="entry_id" value="">
+
+    <label>Subject:</label>
+    <select name="subject_id" id="subject_id" required>
+        <option value="">Select subject</option>
+        {% for sub in subjects %}
+            <option value="{{ sub.subject_id }}">{{ sub.subject_code }} - {{ sub.subject_name }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Section:</label>
+    <input name="section" id="section" type="text" required placeholder="e.g. A1" />
+
+    <label>Day:</label>
+    <select name="day" id="day" required>
+        <option value="">Select day</option>
+        {% for d in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
+            <option value="{{ d }}">{{ d }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Year Level:</label>
+    <select name="year_level" id="year_level" required>
+        <option value="">Select year</option>
+        {% if year_options %}
+            {% for y in year_options %}
+                <option value="{{ y.year }}" {% if selected_year == y.year %}selected{% endif %}>Year {{ y.year }}</option>
+            {% endfor %}
+        {% else %}
+            <option value="1">Year 1</option>
+            <option value="2">Year 2</option>
+        {% endif %}
+    </select>
+
+    <label>Department:</label>
+    <select name="department" id="department" required>
+        <option value="">Select department</option>
+        {% for d in department_options %}
+            <option value="{{ d }}" {% if selected_department == d %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Period:</label>
+    <select name="period" id="period" required>
+        <option value="">Select period</option>
+        <option value="1">Period 1 (9:00 AM - 10:00 AM)</option>
+        <option value="2">Period 2 (10:00 AM - 11:00 AM)</option>
+        <option value="3">Period 3 (11:00 AM - 12:00 PM)</option>
+        <option value="4">Period 4 (1:00 PM - 2:00 PM)</option>
+        <option value="5">Period 5 (2:00 PM - 3:00 PM)</option>
+        <option value="6">Period 6 (3:00 PM - 4:00 PM)</option>
+    </select>
+
+    <label>Room:</label>
+    <input name="room" id="room" type="text" placeholder="Room number" />
+
+    <button type="submit">Save Timetable Entry</button>
+    <button type="button" onclick="resetTimetableForm()" style="margin-left:.5rem;">Reset</button>
+</form>
+
+{% if entries %}
+    <table class="data-table" style="width:100%;">
+        <thead>
+            <tr>
+                <th>Day</th>
+                <th>Period</th>
+                <th>Time</th>
+                <th>Subject</th>
+                <th>Year</th>
+                <th>Section</th>
+                <th>Department</th>
+                <th>Room</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in entries %}
+            <tr>
+                <td>{{ e.day }}</td>
+                <td>{{ e.period }}</td>
+                <td>{{ e.start_time | convert_to_ist }} - {{ e.end_time | convert_to_ist }}</td>
+                <td>{{ e.subject_code }} - {{ e.subject_name }}</td>
+                <td>{{ e.year_level }}</td>
+                <td>{{ e.section }}</td>
+                <td>{{ e.department or '-' }}</td>
+                <td>{{ e.room or '-' }}</td>
+                <td>
+                    <button type="button" class="edit-entry" 
+                            data-entry-id="{{ e.timetable_id }}"
+                            data-subject-id="{{ e.subject_id }}"
+                            data-year-level="{{ e.year_level }}"
+                            data-period="{{ e.period }}"
+                            data-section="{{ e.section }}"
+                            data-day="{{ e.day }}"
+                            data-department="{{ e.department or '' }}"
+                            data-room="{{ e.room or '' }}">
+                        Edit
+                    </button>
+                    <form action="{{ url_for('delete_timetable_entry', tid=e.timetable_id) }}" method="post" style="display:inline; margin-left:0.5rem;">
+                        <button type="submit" onclick="return confirm('Delete this timetable entry?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No timetable entries found yet.</p>
+{% endif %}
+
+<script>
+    function loadEntry(id, subjectId, yearLevel, period, section, day, department, room) {
+        document.getElementById('entry_id').value = id;
+        document.getElementById('subject_id').value = subjectId;
+        document.getElementById('year_level').value = yearLevel;
+        document.getElementById('period').value = period;
+        document.getElementById('section').value = section;
+        document.getElementById('day').value = day;
+        document.getElementById('department').value = department;
+        document.getElementById('room').value = room;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetTimetableForm() {
+        document.getElementById('entry_id').value = '';
+        document.getElementById('subject_id').value = '';
+        document.getElementById('section').value = '';
+        document.getElementById('day').value = '';
+        document.getElementById('department').value = '';
+        document.getElementById('period').value = '';
+        document.getElementById('room').value = '';
+    }
+
+    document.querySelectorAll('.edit-entry').forEach(function(button) {
+        button.addEventListener('click', function() {
+            loadEntry(
+                this.dataset.entryId,
+                this.dataset.subjectId,
+                this.dataset.yearLevel,
+                this.dataset.period,
+                this.dataset.section,
+                this.dataset.day,
+                this.dataset.department,
+                this.dataset.room
+            );
+        });
+    });
+</script>
+
+{% endblock %}

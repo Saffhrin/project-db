@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Anomaly Dashboard{% endblock %}
+{% block content %}
+<h2>Anomaly Detection Dashboard</h2>
+<p>AI-detected abnormal marks and attendance patterns.</p>
+
+<form method="post" action="{{ url_for('run_anomaly_detection') }}">
+    <button type="submit" class="btn btn-primary" style="margin-bottom: 1em;">Run Anomaly Detection Now</button>
+</form>
+
+{% if anomalies %}
+<table class="data-table">
+    <thead>
+    <tr>
+        <th>Detected At</th>
+        <th>Reg No</th>
+        <th>Student</th>
+        <th>Subject</th>
+        <th>Category</th>
+        <th>Description</th>
+        <th>Score</th>
+        <th>Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for a in anomalies %}
+        <tr>
+            <td>{{ a.detected_at }}</td>
+            <td>{{ a.reg_no }}</td>
+            <td>{{ a.student_name }}</td>
+            <td>{{ a.subject_code }}</td>
+            <td>{{ a.category }}</td>
+            <td>{{ a.description }}</td>
+            <td>{{ "%.2f"|format(a.score) if a.score is not none }}</td>
+            <td>{{ a.status }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+    <p>No anomalies detected yet. Run the AI script after entering marks and attendance.</p>
+{% endif %}
+{% endblock %}
+

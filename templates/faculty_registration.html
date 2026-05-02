@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Faculty Registration{% endblock %}
+{% block content %}
+<h2>Faculty Registration</h2>
+<form method="post" class="form-card">
+    <div class="form-row">
+        <label for="emp_no">Employee Number</label>
+        <input type="text" id="emp_no" name="emp_no" required placeholder="F001">
+    </div>
+    <div class="form-row">
+        <label for="name">Faculty Name</label>
+        <input type="text" id="name" name="name" required placeholder="Dr. John Doe">
+    </div>
+    <div class="form-row">
+        <label for="department">Department</label>
+        <input type="text" id="department" name="department" required placeholder="CSE">
+    </div>
+    <button type="submit" class="btn-primary">Save Faculty</button>
+</form>
+{% endblock %}
+
