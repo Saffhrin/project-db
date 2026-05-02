@@ -1,6 +1,6 @@
 Flask
 SQLAlchemy
-mysql-connector-python
+PyMySQL
 pandas
 scikit-learn
 gunicorn
