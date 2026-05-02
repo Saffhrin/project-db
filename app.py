@@ -33,7 +33,7 @@ def term_attendance_pct_and_eligibility(attended_sum: float, term_total: int) ->
 
 def create_app() -> Flask:
     app = Flask(__name__)
-    app.secret_key = os.getenv("FLASK_SECRET_KEY", "change-me")
+    app.secret_key = os.getenv("FLASK_SECRET_KEY", "a7f3k9x2m8p1q5r6t4u8v2w9")
 
     engine: Engine = create_engine(DB_URL, echo=False, future=True)
     app.config["DB_ENGINE"] = engine
