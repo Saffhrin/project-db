@@ -1,24 +1,11 @@
--- Database schema for AI Powered Real-Time Academic Database Integrity System
-
 CREATE TABLE departments (
-    department_id   INT PRIMARY KEY AUTO_INCREMENT,
+    department_id   SERIAL PRIMARY KEY,
     department_name VARCHAR(100) NOT NULL UNIQUE,
     description     VARCHAR(255)
 );
 
-CREATE TABLE admins (
-    admin_id       INT PRIMARY KEY AUTO_INCREMENT,
-    username       VARCHAR(50) NOT NULL UNIQUE,
-    password       VARCHAR(255) NOT NULL,
-    name           VARCHAR(100) NOT NULL,
-    department_id  INT,
-    role           VARCHAR(30) DEFAULT 'ADMIN',
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (department_id) REFERENCES departments(department_id)
-);
-
 CREATE TABLE students (
-    student_id      INT PRIMARY KEY AUTO_INCREMENT,
+    student_id      SERIAL PRIMARY KEY,
     reg_no          VARCHAR(20) NOT NULL UNIQUE,
     name            VARCHAR(100) NOT NULL,
     department      VARCHAR(50),
@@ -30,7 +17,7 @@ CREATE TABLE students (
 );
 
 CREATE TABLE faculty (
-    faculty_id      INT PRIMARY KEY AUTO_INCREMENT,
+    faculty_id      SERIAL PRIMARY KEY,
     emp_no          VARCHAR(20) NOT NULL UNIQUE,
     name            VARCHAR(100) NOT NULL,
     department      VARCHAR(50),
@@ -38,15 +25,37 @@ CREATE TABLE faculty (
     FOREIGN KEY (department_id) REFERENCES departments(department_id)
 );
 
+CREATE TABLE users (
+    user_id         SERIAL PRIMARY KEY,
+    username        VARCHAR(50) NOT NULL UNIQUE,
+    password        VARCHAR(255) NOT NULL,
+    role            VARCHAR(20) NOT NULL,
+    student_id      INT,
+    faculty_id      INT,
+    FOREIGN KEY (student_id) REFERENCES students(student_id),
+    FOREIGN KEY (faculty_id) REFERENCES faculty(faculty_id)
+);
+
+CREATE TABLE admins (
+    admin_id       SERIAL PRIMARY KEY,
+    username       VARCHAR(50) NOT NULL UNIQUE,
+    password       VARCHAR(255) NOT NULL,
+    name           VARCHAR(100) NOT NULL,
+    department_id  INT,
+    role           VARCHAR(30) DEFAULT 'ADMIN',
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (department_id) REFERENCES departments(department_id)
+);
+
 CREATE TABLE subjects (
-    subject_id      INT PRIMARY KEY AUTO_INCREMENT,
+    subject_id      SERIAL PRIMARY KEY,
     subject_code    VARCHAR(20) NOT NULL UNIQUE,
     subject_name    VARCHAR(100) NOT NULL,
     credits         INT CHECK (credits BETWEEN 1 AND 5)
 );
 
 CREATE TABLE timetable (
-    timetable_id    INT PRIMARY KEY AUTO_INCREMENT,
+    timetable_id    SERIAL PRIMARY KEY,
     faculty_id      INT NOT NULL,
     subject_id      INT NOT NULL,
     section         VARCHAR(20) NOT NULL,
@@ -55,13 +64,13 @@ CREATE TABLE timetable (
     end_time        TIME NOT NULL,
     room            VARCHAR(30),
     last_updated_by VARCHAR(50),
-    last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (faculty_id) REFERENCES faculty(faculty_id),
     FOREIGN KEY (subject_id) REFERENCES subjects(subject_id)
 );
 
 CREATE TABLE enrollments (
-    enroll_id       INT PRIMARY KEY AUTO_INCREMENT,
+    enroll_id       SERIAL PRIMARY KEY,
     student_id      INT NOT NULL,
     subject_id      INT NOT NULL,
     faculty_id      INT NOT NULL,
@@ -73,7 +82,7 @@ CREATE TABLE enrollments (
 );
 
 CREATE TABLE marks (
-    mark_id          INT PRIMARY KEY AUTO_INCREMENT,
+    mark_id          SERIAL PRIMARY KEY,
     enroll_id        INT NOT NULL,
     student_id       INT NOT NULL,
     cycle_test_1     DECIMAL(5,2) CHECK (cycle_test_1 BETWEEN 0 AND 15),
@@ -88,7 +97,7 @@ CREATE TABLE marks (
 );
 
 CREATE TABLE attendance (
-    attendance_id    INT PRIMARY KEY AUTO_INCREMENT,
+    attendance_id    SERIAL PRIMARY KEY,
     enroll_id        INT NOT NULL,
     student_id       INT NOT NULL,
     total_classes    INT CHECK (total_classes >= 0),
@@ -102,7 +111,7 @@ CREATE TABLE attendance (
 );
 
 CREATE TABLE anomalies (
-    anomaly_id   INT PRIMARY KEY AUTO_INCREMENT,
+    anomaly_id   SERIAL PRIMARY KEY,
     enroll_id    INT,
     category     VARCHAR(30),
     description  VARCHAR(255),
@@ -113,7 +122,7 @@ CREATE TABLE anomalies (
 );
 
 CREATE TABLE audit_log (
-    audit_id    INT PRIMARY KEY AUTO_INCREMENT,
+    audit_id    SERIAL PRIMARY KEY,
     table_name  VARCHAR(50),
     operation   VARCHAR(10),
     record_id   INT,
@@ -124,7 +133,7 @@ CREATE TABLE audit_log (
 );
 
 CREATE TABLE login_activity (
-    login_activity_id INT PRIMARY KEY AUTO_INCREMENT,
+    login_activity_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
     role VARCHAR(20) NOT NULL,
     student_id INT NULL,
@@ -149,31 +158,31 @@ CREATE TABLE student_risk_scores (
     FOREIGN KEY (enroll_id) REFERENCES enrollments(enroll_id)
 );
 
+CREATE TYPE feedback_rating AS ENUM ('excellent', 'good', 'average', 'poor');
+
 CREATE TABLE feedback (
-    feedback_id         INT PRIMARY KEY AUTO_INCREMENT,
-    enroll_id           INT NOT NULL,
+    feedback_id         SERIAL PRIMARY KEY,
+    enroll_id           INT NOT NULL UNIQUE,
     student_id          INT NOT NULL,
     faculty_id          INT NOT NULL,
     subject_id          INT NOT NULL,
-    teaching_quality    ENUM('excellent', 'good', 'average', 'poor'),
-    subject_knowledge   ENUM('excellent', 'good', 'average', 'poor'),
-    communication       ENUM('excellent', 'good', 'average', 'poor'),
-    preparation         ENUM('excellent', 'good', 'average', 'poor'),
-    responsiveness      ENUM('excellent', 'good', 'average', 'poor'),
-    punctuality         ENUM('excellent', 'good', 'average', 'poor'),
-    overall_rating      ENUM('excellent', 'good', 'average', 'poor'),
+    teaching_quality    feedback_rating,
+    subject_knowledge   feedback_rating,
+    communication       feedback_rating,
+    preparation         feedback_rating,
+    responsiveness      feedback_rating,
+    punctuality         feedback_rating,
+    overall_rating      feedback_rating,
     comments            TEXT,
     submitted_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (enroll_id) REFERENCES enrollments(enroll_id),
     FOREIGN KEY (student_id) REFERENCES students(student_id),
     FOREIGN KEY (faculty_id) REFERENCES faculty(faculty_id),
-    FOREIGN KEY (subject_id) REFERENCES subjects(subject_id),
-    UNIQUE(enroll_id)  -- one feedback per enrollment
+    FOREIGN KEY (subject_id) REFERENCES subjects(subject_id)
 );
 
--- Tables for question-wise and component-wise marks
 CREATE TABLE cycle_test_questions (
-    question_id         INT PRIMARY KEY AUTO_INCREMENT,
+    question_id         SERIAL PRIMARY KEY,
     mark_id             INT NOT NULL,
     test_number         INT CHECK (test_number IN (1, 2)),
     question_number     INT CHECK (question_number BETWEEN 1 AND 50),
@@ -184,7 +193,7 @@ CREATE TABLE cycle_test_questions (
 );
 
 CREATE TABLE project_components (
-    component_id        INT PRIMARY KEY AUTO_INCREMENT,
+    component_id        SERIAL PRIMARY KEY,
     mark_id             INT NOT NULL,
     component_name      VARCHAR(100),
     marks_obtained      DECIMAL(5,2) CHECK (marks_obtained >= 0),
@@ -192,103 +201,50 @@ CREATE TABLE project_components (
     FOREIGN KEY (mark_id) REFERENCES marks(mark_id)
 );
 
-DELIMITER $$
+CREATE OR REPLACE FUNCTION update_marks_internal_total()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.internal_total :=
+        COALESCE(NEW.cycle_test_1,0) +
+        COALESCE(NEW.cycle_test_2,0) +
+        COALESCE(NEW.project_marks,0) +
+        COALESCE(NEW.assignment_marks,0);
+    IF NEW.internal_total > 60 THEN
+        RAISE EXCEPTION 'Internal total cannot exceed 60';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_marks_before_ins
 BEFORE INSERT ON marks
-FOR EACH ROW
-BEGIN
-    SET NEW.internal_total =
-        IFNULL(NEW.cycle_test_1,0) +
-        IFNULL(NEW.cycle_test_2,0) +
-        IFNULL(NEW.project_marks,0) +
-        IFNULL(NEW.assignment_marks,0);
-
-    IF NEW.internal_total > 60 THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Internal total cannot exceed 60';
-    END IF;
-END$$
+FOR EACH ROW EXECUTE FUNCTION update_marks_internal_total();
 
 CREATE TRIGGER trg_marks_before_upd
 BEFORE UPDATE ON marks
-FOR EACH ROW
-BEGIN
-    SET NEW.internal_total =
-        IFNULL(NEW.cycle_test_1,0) +
-        IFNULL(NEW.cycle_test_2,0) +
-        IFNULL(NEW.project_marks,0) +
-        IFNULL(NEW.assignment_marks,0);
+FOR EACH ROW EXECUTE FUNCTION update_marks_internal_total();
 
-    IF NEW.internal_total > 60 THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Internal total cannot exceed 60';
+CREATE OR REPLACE FUNCTION update_attendance_pct()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.total_classes > 0 THEN
+        NEW.attendance_pct := (NEW.attended_classes * 100.0) / NEW.total_classes;
+    ELSE
+        NEW.attendance_pct := 0;
     END IF;
-END$$
+    IF NEW.attendance_pct >= 75 THEN
+        NEW.eligibility := 'ELIGIBLE';
+    ELSE
+        NEW.eligibility := 'DEBARRED';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_attendance_before_ins
 BEFORE INSERT ON attendance
-FOR EACH ROW
-BEGIN
-    IF NEW.total_classes > 0 THEN
-        SET NEW.attendance_pct =
-            (NEW.attended_classes * 100.0) / NEW.total_classes;
-    ELSE
-        SET NEW.attendance_pct = 0;
-    END IF;
-
-    IF NEW.attendance_pct >= 75 THEN
-        SET NEW.eligibility = 'ELIGIBLE';
-    ELSE
-        SET NEW.eligibility = 'DEBARRED';
-    END IF;
-END$$
+FOR EACH ROW EXECUTE FUNCTION update_attendance_pct();
 
 CREATE TRIGGER trg_attendance_before_upd
 BEFORE UPDATE ON attendance
-FOR EACH ROW
-BEGIN
-    IF NEW.total_classes > 0 THEN
-        SET NEW.attendance_pct =
-            (NEW.attended_classes * 100.0) / NEW.total_classes;
-    ELSE
-        SET NEW.attendance_pct = 0;
-    END IF;
-
-    IF NEW.attendance_pct >= 75 THEN
-        SET NEW.eligibility = 'ELIGIBLE';
-    ELSE
-        SET NEW.eligibility = 'DEBARRED';
-    END IF;
-END$$
-
-CREATE TRIGGER trg_marks_audit
-AFTER UPDATE ON marks
-FOR EACH ROW
-BEGIN
-    INSERT INTO audit_log(table_name, operation, record_id, changed_by, old_values, new_values)
-    VALUES(
-        'marks',
-        'UPDATE',
-        OLD.mark_id,
-        NEW.last_updated_by,
-        CONCAT('internal_total=', OLD.internal_total),
-        CONCAT('internal_total=', NEW.internal_total)
-    );
-END$$
-
-CREATE TRIGGER trg_attendance_audit
-AFTER UPDATE ON attendance
-FOR EACH ROW
-BEGIN
-    INSERT INTO audit_log(table_name, operation, record_id, changed_by, old_values, new_values)
-    VALUES(
-        'attendance',
-        'UPDATE',
-        NEW.last_updated_by,
-        CONCAT('attendance_pct=', OLD.attendance_pct),
-        CONCAT('attendance_pct=', NEW.attendance_pct)
-    );
-END$$
-
-DELIMITER ;
+FOR EACH ROW EXECUTE FUNCTION update_attendance_pct();
