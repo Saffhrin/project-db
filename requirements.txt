@@ -1,6 +1,7 @@
 Flask
 SQLAlchemy
-PyMySQL
+psycopg2-binary
+gunicorn
 pandas
 scikit-learn
-gunicorn
+python-dateutil
