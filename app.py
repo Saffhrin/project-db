@@ -14,7 +14,7 @@ from ai_anomaly_detector import run_detection
 
 DB_URL = os.getenv(
     "ACADEMIC_DB_URL",
-    "mysql+pymysql://root:Amit948@localhost/academic_integrity",
+    "postgresql://localhost/academic_integrity",
 )
 
 # Official % = (sum of present sessions) / full-term session count (e.g. 65). Daily rows store
@@ -4116,4 +4116,3 @@ if __name__ == "__main__":
     flask_app = create_app()
     port = int(os.environ.get("PORT", 5000))
     flask_app.run(host="0.0.0.0", port=port, debug=False)
-
