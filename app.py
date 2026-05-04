@@ -14,7 +14,7 @@ from ai_anomaly_detector import run_detection
 
 DB_URL = os.getenv(
     "ACADEMIC_DB_URL",
-    "postgresql://localhost/academic_integrity",
+    "mysql+mysqlconnector://root:Amit948@localhost/academic_integrity",
 )
 
 # Official % = (sum of present sessions) / full-term session count (e.g. 65). Daily rows store
@@ -33,7 +33,7 @@ def term_attendance_pct_and_eligibility(attended_sum: float, term_total: int) ->
 
 def create_app() -> Flask:
     app = Flask(__name__)
-    app.secret_key = os.getenv("FLASK_SECRET_KEY", "a7f3k9x2m8p1q5r6t4u8v2w9")
+    app.secret_key = os.getenv("FLASK_SECRET_KEY", "change-me")
 
     engine: Engine = create_engine(DB_URL, echo=False, future=True)
     app.config["DB_ENGINE"] = engine
@@ -4114,5 +4114,4 @@ def create_app() -> Flask:
 
 if __name__ == "__main__":
     flask_app = create_app()
-    port = int(os.environ.get("PORT", 5000))
-    flask_app.run(host="0.0.0.0", port=port, debug=False)
+    flask_app.run(debug=True)
